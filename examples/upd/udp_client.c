@@ -12,16 +12,11 @@
 
 #define SERVER_IP_ADDRESS "127.0.0.1"
 #define SERVER_PORT 5060
-
+#define BUFFER_SIZE 1024
 int main() {
-  int s = -1;
-  char bufferReply[80] = {'\0'};
-  char message[] = "Good morning, Vietnam\n";
-  int messageLen = strlen(message) + 1;
-
   // Create socket
-  s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-  if (s == -1) {
+  int send_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+  if (send_socket == -1) {
     printf("Could not create socket : %d", errno);
     return -1;
   }
@@ -42,9 +37,12 @@ int main() {
   }
 
   // send the message
+  char message[] = "My name is ShayG";
+  int messageLen = strlen(message) + 1;
+
   int sendResult =
-      sendto(s, message, messageLen, 0, (struct sockaddr *)&serverAddress,
-             sizeof(serverAddress));
+      sendto(send_socket, message, messageLen, 0,
+             (struct sockaddr *)&serverAddress, sizeof(serverAddress));
   if (sendResult == -1) {
     printf("sendto() failed with error code  : %d", errno);
     return -1;
@@ -58,17 +56,18 @@ int main() {
   memset((char *)&fromAddress, 0, sizeof(fromAddress));
 
   // try to receive some data, this is a blocking call
-  int recvLen = recvfrom(s, bufferReply, sizeof(bufferReply) - 1, 0,
+  char bufferReply[BUFFER_SIZE] = {'\0'};
+  int recvLen = recvfrom(send_socket, bufferReply, sizeof(bufferReply) - 1, 0,
                          (struct sockaddr *)&fromAddress, &fromAddressSize);
   if (recvLen == -1) {
     printf("recvfrom() failed with error code  : %d", errno);
     return -1;
   }
-
+  // print the ip of the sender the port and the data received
   printf("[%s:%d] Data: %s", inet_ntoa(fromAddress.sin_addr),
          ntohs(fromAddress.sin_port), bufferReply);
 
-  close(s);
+  close(send_socket);
 
   return 0;
 }
