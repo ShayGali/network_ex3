@@ -24,5 +24,21 @@ int main(int argc, char *argv[]) {
   }
   printf("Port: %d\n", port);
   printf("Algorithm: %s\n", algo);
+
+  /*
+  ~ template code ~
+  socket = create_socket();
+  // wait for a connection
+  client_socket = accept_connection(socket);
+  do{
+    file = receive_file(socket);
+    time = measure_time(file); // need to send the file?
+    get_client_decision(client_socket);
+  }while(1);
+  close_connection(client_socket);
+  print_logs();
+  calc_stats();
+  close_socket(socket);
+  */
   return 0;
 }
