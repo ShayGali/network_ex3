@@ -6,7 +6,7 @@
 int main(int argc, char *argv[]) {
   int port;
   char *algo;
-  if (!check_args(argc, argv, &port, &algo)) {
+  if (!parse_args(argc, argv, &port, &algo)) {
     return 1;
   }
   printf("Port: %d\n", port);

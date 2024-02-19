@@ -15,7 +15,7 @@
  * is valid. a valid algorithm is either "reno" or "cubic"
  * @return 1 if the arguments are valid, 0 otherwise
  */
-int check_args(int argc, char *argv[], int *port, char **algo) {
+int parse_args(int argc, char *argv[], int *port, char **algo) {
   if (argc != 5 ||  // check if the number of arguments is correct
                     // check if the user passed the correct arguments
       (strcmp(argv[1], "-p") != 0 && strcmp(argv[1], "-algo") != 0) ||

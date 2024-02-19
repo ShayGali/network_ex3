@@ -16,14 +16,10 @@ where:
 
 #include "args_parser.h"
 
-int check_args(int argc, char *argv[], int *port, char **algo);
-int parse_port(char *port);
-int is_valid_algo(char *algo);
-
 int main(int argc, char *argv[]) {
   int port;
   char *algo;
-  if (!check_args(argc, argv, &port, &algo)) {
+  if (!parse_args(argc, argv, &port, &algo)) {
     return 1;
   }
   printf("Port: %d\n", port);

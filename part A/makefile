@@ -1,14 +1,14 @@
 .PHONY: all clean
 
+HEADERS = args_parser.h
+
 all: TCP_Reciever TCP_Sender
 
 TCP_Reciever: TCP_Reciever.o args_parser.o
 	gcc -Wall -o TCP_Reciever TCP_Reciever.o args_parser.o
-	rm -f TCP_Reciever.o
 
 TCP_Sender: TCP_Sender.o args_parser.o
 	gcc -Wall -o TCP_Sender TCP_Sender.o args_parser.o
-	rm -f TCP_Sender.o
 
 %.o: %.c $(HEADERS)
 	gcc -Wall -c $< -o $@
