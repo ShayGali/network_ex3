@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "args_parser.h"
@@ -29,14 +30,6 @@ int main(int argc, char *argv[]) {
   }
   printf("Port: %d\n", port);
   printf("Algorithm: %s\n", algo);
-
-  int file_size;
-  char *file_content = read_file("file.txt", &file_size);
-  if (file_content == NULL) {
-    return 1;
-  }
-  printf("File size: %d\n", file_size);
-  printf("File content: %s\n", file_content);
 
   int sock = connect_to_recv(port);
   if (sock == -1) {
