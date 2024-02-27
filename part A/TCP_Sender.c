@@ -11,6 +11,7 @@
 #include "args_parser.h"
 
 #define RECEIVER_IP "127.0.0.1"
+#define FILE_SIZE 2097152  // 2MB
 /**
  * Create a TCP socket between the sender and the receiver
  */
@@ -31,6 +32,7 @@ int main(int argc, char *argv[]) {
   printf("Port: %d\n", port);
   printf("Algorithm: %s\n", algo);
 
+  int file_data = util_generate_random_data(FILE_SIZE);
   int sock = connect_to_recv(port);
   if (sock == -1) {
     return 1;
@@ -47,6 +49,8 @@ int main(int argc, char *argv[]) {
   send_exit_message();
   close_socket();
   */
+
+  free(file_data);
   return 0;
 }
 
