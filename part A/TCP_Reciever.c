@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
   clock_t start, end;
   double cpu_time_used;
   int port;
-  int keep = 1;
+  int run = 1;
 
   char *algo;
   if (!parse_args(argc, argv, &port, &algo)) {
@@ -50,8 +50,11 @@ int main(int argc, char *argv[]) {
     printf("Error opening  stats file!\n");
     return 1;
   }
+  fprintf(file, "     * Statistics *\n");
+  double average_time = 0;
+  double average_speed = 0;
 
-  while (keep) {
+  while (run) {
     size_t total_bytes = 0;
     char buffer[2097152];
 
@@ -61,7 +64,7 @@ int main(int argc, char *argv[]) {
       ssize_t bytes_received =
           recv(sock, buffer + total_bytes, sizeof(buffer) - total_bytes, 0);
       if (total_bytes == 0 && buffer[0] == EXIT_MESSAGE[0]) {
-        keep = 0;
+        run = 0;
         printf("exit message received\n");
         break;
       }
@@ -72,12 +75,33 @@ int main(int argc, char *argv[]) {
       total_bytes += bytes_received;
     }
     end = clock();
-    if (keep) {
+    if (run) {
       printf("file received\n");
       cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
-      fprintf(file, "Run #%d Data: Time=%f; Speed=%f\n", cpu_time_used);
+      fprintf(file, "Run #%d Data: Time=%f S ; Speed=%f MB/S\n", run,
+              cpu_time_used, (2 / cpu_time_used));
+      average_time += cpu_time_used;
+      average_speed += (2 / cpu_time_used);
+      run++;
     }
   }
+
+  fprintf(file, "Average time: %f S\n", average_time / run);
+  fprintf(file, "Average speed: %f MB/S\n", average_speed / run);
+  fprintf(file, "Congestion control algorithm: %s\n", algo);
+  fprintf(file, "Thank you for using our service\n");
+
+  // print the statistics
+  char print_buffer[100];
+  while (fgets(print_buffer, 100, file) != NULL) {
+    printf("%s", print_buffer);
+  }
+
+  // Close the file
+  fclose(file);
+
+  // Close the socket
+  close(sock);
 
   return 0;
 }
