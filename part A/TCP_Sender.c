@@ -71,7 +71,7 @@ char *util_generate_random_data(unsigned int size) {
   // Randomize the seed of the random number generator.
   srand(time(NULL));
   for (unsigned int i = 0; i < size; i++)
-    *(buffer + i) = ((unsigned int)rand() % 256);
+    *(buffer + i) = ((unsigned int)rand() % 254) + 1;
   return buffer;
 }
 
