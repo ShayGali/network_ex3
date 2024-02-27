@@ -29,8 +29,6 @@ int main(int argc, char *argv[]) {
   if (!parse_args(argc, argv, &port, &algo)) {
     return 1;
   }
-  printf("Port: %d\n", port);
-  printf("Algorithm: %s\n", algo);
 
   int file_data = util_generate_random_data(FILE_SIZE);
   int sock = connect_to_recv(port);
