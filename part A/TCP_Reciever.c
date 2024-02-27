@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
   printf("Algorithm: %s\n", algo);
 
   /**
-   * create a TCP socket btween the receiver and the sender
+   * create a TCP socket between the receiver and the sender
    */
   int sock = connect_to_sndr(port);
   if (sock == -1) {
@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
       total_bytes += bytes_received;
     }
     end = clock();
-    printf("file received\n");
+    if (keep) printf("file received\n");
     cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
   }
 
