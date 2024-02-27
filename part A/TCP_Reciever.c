@@ -19,13 +19,17 @@ where:
 #include <unistd.h>
 
 #include "args_parser.h"
+
+// the exit message that the sender will send
 const char EXIT_MESSAGE[] = {255, 0};
 
-int connect_to_sndr(int port);
+int connect_to_sender(int port);
 
 int main(int argc, char *argv[]) {
-  clock_t start, end;
+  clock_t start, end;  // to measure the time it took to receive the file
   double cpu_time_used;
+
+  // Parse the command line arguments
   int port;
   int run = 1;
 
@@ -34,16 +38,15 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  printf("Port: %d\n", port);
-  printf("Algorithm: %s\n", algo);
-
-  /**
-   * create a TCP socket between the receiver and the sender
-   */
-  int sock = connect_to_sndr(port);
+  // create a TCP socket between the receiver and the sender
+  int sock = connect_to_sender(port);
   if (sock == -1) {
     return 1;
   }
+
+  // main loop to receive the file
+  int keep = 1;
+  char buffer[2097152];  // 2MB buffer to receive the file
 
   FILE *file = fopen("stats", "w+");
   if (file == NULL) {
@@ -55,25 +58,29 @@ int main(int argc, char *argv[]) {
   double average_speed = 0;
 
   while (run) {
-    size_t total_bytes = 0;
-    char buffer[2097152];
+    size_t total_bytes = 0;  // the total bytes received so far
 
-    start = clock();
+    start = clock();  // start measuring the time
 
+    // keep receiving until the file is received
     while (total_bytes < 2092152) {
       ssize_t bytes_received =
           recv(sock, buffer + total_bytes, sizeof(buffer) - total_bytes, 0);
+
+      // check if the exit message was received
       if (total_bytes == 0 && buffer[0] == EXIT_MESSAGE[0]) {
         run = 0;
         printf("exit message received\n");
         break;
       }
-      if (bytes_received == -1) {
+      if (bytes_received == -1) {  // check for errors
         perror("recv");
         return 1;
       }
+
       total_bytes += bytes_received;
     }
+    // stop measuring the time
     end = clock();
     if (run) {
       printf("file received\n");
@@ -108,21 +115,26 @@ int main(int argc, char *argv[]) {
 
 /**
  * @brief Create a TCP socket between the receiver and the sender
+ * will listen on the given port ( and local IP address) and wait for the sender
+ * to connect
  * @param port The port to connect to
- * @return The socket file descriptor, or -1 on error
+ * @return The socket of the connection to the sender, or -1 on error
  */
-int connect_to_sndr(int port) {
+int connect_to_sender(int port) {
+  // create a socket
   int sock = socket(AF_INET, SOCK_STREAM, 0);
   if (sock == -1) {
     perror("socket");
     return -1;
   }
 
+  // create the address structure
   struct sockaddr_in addr;
   addr.sin_family = AF_INET;
   addr.sin_port = htons(port);
   addr.sin_addr.s_addr = INADDR_ANY;
 
+  // bind the socket to the address
   if (bind(sock, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
     perror("bind");
     return -1;
@@ -133,6 +145,7 @@ int connect_to_sndr(int port) {
     return -1;
   }
 
+  // wait for the sender to connect
   struct sockaddr_in sender_addr;
   socklen_t sendder_addr_len = sizeof(sender_addr);
   int sender_sock =
