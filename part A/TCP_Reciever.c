@@ -91,9 +91,11 @@ int main(int argc, char *argv[]) {
       run++;
     }
   }
+  // add the average time and speed to the file
+  fprintf(file, "Average time: %f S\n", average_time / (run - 1));
+  fprintf(file, "Average speed: %f MB/S\n", average_speed / (run - 1));
 
-  fprintf(file, "Average time: %f S\n", average_time / run);
-  fprintf(file, "Average speed: %f MB/S\n", average_speed / run);
+  // end the file with nice message
   fprintf(file, "Congestion control algorithm: %s\n", algo);
   fprintf(file, "Thank you for using our service\n");
 
