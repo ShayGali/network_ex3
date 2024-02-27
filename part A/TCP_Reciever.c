@@ -77,13 +77,18 @@ int main(int argc, char *argv[]) {
       break;
     }
     // keep receiving until the file is received
-    while (total_bytes < 2092152) {
+    while (total_bytes < sizeof(buffer)) {
       bytes_received =
           recv(sock, buffer + total_bytes, sizeof(buffer) - total_bytes, 0);
 
       if (bytes_received == -1) {  // check for errors
         perror("recv");
         return 1;
+      }
+      if (bytes_received == 0) {
+        printf("sender closed the connection\n");
+        // check if the sender closed the connection
+        break;
       }
 
       total_bytes += bytes_received;
@@ -166,6 +171,6 @@ int connect_to_sender(int port) {
     perror("accept");
     return -1;
   }
-
+  close(sock);
   return sender_sock;
 }
