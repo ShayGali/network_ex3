@@ -83,7 +83,7 @@ char *util_generate_random_data(unsigned int size) {
 int connect_to_recv(int port) {
   int sock = socket(AF_INET, SOCK_STREAM, 0);
   if (sock == -1) {
-    perror("socket creation failed");
+    printf("socket creation failed\n");
     return -1;
   }
 
@@ -93,14 +93,14 @@ int connect_to_recv(int port) {
   receiver_addr.sin_port = htons(port);  // Convert port to network byte order
   // Convert IPv4 and IPv6 addresses from text to binary form
   if (inet_pton(AF_INET, RECEIVER_IP, &(receiver_addr.sin_addr)) <= 0) {
-    perror("invalid address or address not supported");
+    perror("invalid address or address not supported\n");
     return -1;
   }
 
   // connect to the receiver
-  if (connect(sock, (struct sockaddr *)&receiver_addr, sizeof(receiver_addr)) <=
+  if (connect(sock, (struct sockaddr *)&receiver_addr, sizeof(receiver_addr)) <
       0) {
-    perror("connection failed");
+    printf("connection failed\n");
     return -1;
   }
 
@@ -113,14 +113,13 @@ int connect_to_recv(int port) {
  * @param file_data the file data to send
  */
 void send_file(int sock, char *file_data) {
-  size_t message_len = strlen(file_data);
   size_t bytes_sent = 0;
 
   // loop until all the data is sent
-  while (bytes_sent < message_len) {
+  while (bytes_sent < FILE_SIZE) {
     // send the data
     ssize_t result =
-        send(sock, file_data + bytes_sent, message_len - bytes_sent, 0);
+        send(sock, file_data + bytes_sent, FILE_SIZE - bytes_sent, 0);
     if (result < 0) {  // if an error occurred
       break;
     }
