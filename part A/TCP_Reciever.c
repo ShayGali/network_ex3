@@ -45,6 +45,12 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
+  FILE *file = fopen("stats", "w+");
+  if (file == NULL) {
+    printf("Error opening  stats file!\n");
+    return 1;
+  }
+
   while (keep) {
     size_t total_bytes = 0;
     char buffer[2097152];
@@ -66,8 +72,11 @@ int main(int argc, char *argv[]) {
       total_bytes += bytes_received;
     }
     end = clock();
-    if (keep) printf("file received\n");
-    cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+    if (keep) {
+      printf("file received\n");
+      cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+      fprintf(file, "Run #%d Data: Time=%f; Speed=%f\n", cpu_time_used);
+    }
   }
 
   return 0;
