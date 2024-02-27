@@ -1,5 +1,5 @@
 #! /bin/bash
-PORT="5050"
+PORT="5060"
 
 make all
 echo "Running TCP_Reciever"
