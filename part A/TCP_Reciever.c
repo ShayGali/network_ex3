@@ -21,11 +21,13 @@ where:
 #include "args_parser.h"
 
 // the exit message that the sender will send
-const char EXIT_MESSAGE[] = {255, 0};
+#define EXIT_MESSAGE "exit"
 
 int connect_to_sender(int port);
 
 int main(int argc, char *argv[]) {
+  printf("~~~~~~~~ TCP Receiver ~~~~~~~~\n");
+
   clock_t start, end;  // to measure the time it took to receive the file
   double cpu_time_used;
 
@@ -52,7 +54,7 @@ int main(int argc, char *argv[]) {
     printf("Error opening  stats file!\n");
     return 1;
   }
-  fprintf(file, "     * Statistics *\n");
+  fprintf(file, "\n\n~~~~~~~~ Statistics ~~~~~~~~\n");
   double average_time = 0;
   double average_speed = 0;
 
@@ -61,17 +63,24 @@ int main(int argc, char *argv[]) {
 
     start = clock();  // start measuring the time
 
+    // check if the exit message was received
+    ssize_t bytes_received = recv(sock, buffer, sizeof(buffer), 0);
+    total_bytes += bytes_received;
+    if (bytes_received == -1) {  // check for errors
+      perror("recv");
+      return 1;
+    }
+
+    if (strncmp(buffer, EXIT_MESSAGE, strlen(EXIT_MESSAGE)) == 0) {
+      listen = 0;
+      printf("exit message received\n");
+      break;
+    }
     // keep receiving until the file is received
     while (total_bytes < 2092152) {
-      ssize_t bytes_received =
+      bytes_received =
           recv(sock, buffer + total_bytes, sizeof(buffer) - total_bytes, 0);
 
-      // check if the exit message was received
-      if (total_bytes == 0 && buffer[0] == EXIT_MESSAGE[0]) {
-        listen = 0;
-        printf("exit message received\n");
-        break;
-      }
       if (bytes_received == -1) {  // check for errors
         perror("recv");
         return 1;
@@ -96,10 +105,12 @@ int main(int argc, char *argv[]) {
   fprintf(file, "Average speed: %f MB/S\n", average_speed / (run - 1));
 
   // end the file with nice message
+  fprintf(file, "\n\n-----------------------------\n");
   fprintf(file, "Congestion control algorithm: %s\n", algo);
   fprintf(file, "Thank you for using our service\n");
 
   // print the statistics
+  rewind(file);
   char print_buffer[100];
   while (fgets(print_buffer, 100, file) != NULL) {
     printf("%s", print_buffer);
@@ -107,7 +118,7 @@ int main(int argc, char *argv[]) {
 
   // Close the file
   fclose(file);
-
+  remove("stats");
   // Close the socket
   close(sock);
 

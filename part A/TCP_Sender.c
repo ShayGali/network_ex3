@@ -13,7 +13,7 @@
 
 #define RECEIVER_IP "127.0.0.1"
 #define FILE_SIZE 2097152  // 2MB
-#define EXIT_MESSAGE {255, 0};
+#define EXIT_MESSAGE "exit"
 
 int connect_to_recv(int port);
 char *util_generate_random_data(unsigned int size);
@@ -71,7 +71,7 @@ char *util_generate_random_data(unsigned int size) {
   // Randomize the seed of the random number generator.
   srand(time(NULL));
   for (unsigned int i = 0; i < size; i++)
-    *(buffer + i) = ((unsigned int)rand() % 254) + 1;
+    *(buffer + i) = ((unsigned int)rand() % 255) + 1;
   return buffer;
 }
 
@@ -134,6 +134,5 @@ void send_file(int sock, char *file_data) {
  * @param sock the socket file descriptor
  */
 void send_exit_message(int sock) {
-  char message[] = EXIT_MESSAGE;
-  send(sock, message, strlen(message), 0);
+  send(sock, EXIT_MESSAGE, strlen(EXIT_MESSAGE), 0);
 }
