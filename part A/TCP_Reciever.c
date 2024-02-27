@@ -31,8 +31,6 @@ int main(int argc, char *argv[]) {
 
   // Parse the command line arguments
   int port;
-  int run = 1;
-
   char *algo;
   if (!parse_args(argc, argv, &port, &algo)) {
     return 1;
@@ -45,7 +43,8 @@ int main(int argc, char *argv[]) {
   }
 
   // main loop to receive the file
-  int keep = 1;
+  int run = 1;
+  int listen = 1;
   char buffer[2097152];  // 2MB buffer to receive the file
 
   FILE *file = fopen("stats", "w+");
@@ -57,7 +56,7 @@ int main(int argc, char *argv[]) {
   double average_time = 0;
   double average_speed = 0;
 
-  while (run) {
+  while (listen) {
     size_t total_bytes = 0;  // the total bytes received so far
 
     start = clock();  // start measuring the time
@@ -69,7 +68,7 @@ int main(int argc, char *argv[]) {
 
       // check if the exit message was received
       if (total_bytes == 0 && buffer[0] == EXIT_MESSAGE[0]) {
-        run = 0;
+        listen = 0;
         printf("exit message received\n");
         break;
       }
@@ -82,7 +81,7 @@ int main(int argc, char *argv[]) {
     }
     // stop measuring the time
     end = clock();
-    if (run) {
+    if (listen) {
       printf("file received\n");
       cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
       fprintf(file, "Run #%d Data: Time=%f S ; Speed=%f MB/S\n", run,
