@@ -3,7 +3,7 @@
  * Creating a RUDP socket and creating a handshake between
 two peers.
 */
-int RUDP_socket(int port);
+int RUDP_socket(char *ip,int port);
 
 /**
  * Sending data to the peer.
