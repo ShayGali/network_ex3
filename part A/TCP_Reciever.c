@@ -19,6 +19,7 @@ where:
 #include <unistd.h>
 
 #include "args_parser.h"
+const char EXIT_MESSAGE[] = {255, 0};
 
 int connect_to_sndr(int port);
 
@@ -53,7 +54,7 @@ int main(int argc, char *argv[]) {
     while (total_bytes < 2092152) {
       ssize_t bytes_received =
           recv(sock, buffer + total_bytes, sizeof(buffer) - total_bytes, 0);
-      if (total_bytes == 0 && buffer[0] == 255) {
+      if (total_bytes == 0 && buffer[0] == EXIT_MESSAGE[0]) {
         keep = 0;
         printf("exit message received\n");
         break;
@@ -68,22 +69,6 @@ int main(int argc, char *argv[]) {
     printf("file received\n");
     cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
   }
-
-  /*
- ~ template code ~
- socket = create_socket();
- // wait for a connection
- client_socket = accept_connection(socket);
- do{
-   file = receive_file(socket);
-   time = measure_time(file); // need to send the file?
-   get_client_decision(client_socket);
- }while(1);
- close_connection(client_socket);
- print_logs();
- calc_stats();
- close_socket(socket);
- */
 
   return 0;
 }
