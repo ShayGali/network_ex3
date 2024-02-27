@@ -45,6 +45,13 @@ int main(int argc, char *argv[]) {
   // main loop to receive the file
   int keep = 1;
   char buffer[2097152];  // 2MB buffer to receive the file
+
+  FILE *file = fopen("stats", "w+");
+  if (file == NULL) {
+    printf("Error opening  stats file!\n");
+    return 1;
+  }
+
   while (keep) {
     size_t total_bytes = 0;  // the total bytes received so far
 
@@ -70,8 +77,11 @@ int main(int argc, char *argv[]) {
     }
     // stop measuring the time
     end = clock();
-    printf("file received\n");
-    cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+    if (keep) {
+      printf("file received\n");
+      cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+      fprintf(file, "Run #%d Data: Time=%f; Speed=%f\n", cpu_time_used);
+    }
   }
 
   return 0;
