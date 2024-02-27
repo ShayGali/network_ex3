@@ -1,6 +1,7 @@
 /*The Sender will send a randomly generated file*/
 
 #include <arpa/inet.h>
+#include <netinet/tcp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,42 +13,45 @@
 
 #define RECEIVER_IP "127.0.0.1"
 #define FILE_SIZE 2097152  // 2MB
-/**
- * Create a TCP socket between the sender and the receiver
- */
+#define EXIT_MESSAGE {255, 0};
+
 int connect_to_recv(int port);
 char *util_generate_random_data(unsigned int size);
-
-/**
- * Send the file to the receiver
- */
-void send_file();
+void send_exit_message(int sock);
+void send_file(int sock, char *file_data);
 
 int main(int argc, char *argv[]) {
+  // Parse the command line arguments
   int port;
   char *algo;
   if (!parse_args(argc, argv, &port, &algo)) {
     return 1;
   }
 
-  int file_data = util_generate_random_data(FILE_SIZE);
+  // Generate the file data
+  char *file_data = util_generate_random_data(FILE_SIZE);
+
+  // Create a TCP socket between the sender and the receiver
   int sock = connect_to_recv(port);
   if (sock == -1) {
     return 1;
   }
-  /*
-  ~ template code ~
-  file = read_file();
-  socket = create_socket();
-  do{
-    send_file(socket, file);
-    user_decision = ask_user();
-  } while(user_decision == 1);
 
-  send_exit_message();
-  close_socket();
-  */
+  // define the congestion control algorithm used by a socket
+  if (setsockopt(sock, IPPROTO_TCP, TCP_CONGESTION, algo, strlen(algo)) < 0) {
+    perror("setsockopt");
+    return 1;
+  }
 
+  int choice;
+  do {
+    send_file(sock, file_data);
+    printf("Do you want to send the file again? (1/0): ");
+    scanf("%d", &choice);
+  } while (choice == 1);
+
+  send_exit_message(sock);
+  close(sock);
   free(file_data);
   return 0;
 }
@@ -76,7 +80,6 @@ char *util_generate_random_data(unsigned int size) {
  * The sender will connect to the receiver.
  * @return the socket file descriptor, -1 if an error occurred
  */
-
 int connect_to_recv(int port) {
   int sock = socket(AF_INET, SOCK_STREAM, 0);
   if (sock == -1) {
@@ -102,4 +105,36 @@ int connect_to_recv(int port) {
   }
 
   return sock;
+}
+
+/**
+ * Send the file to the receiver.
+ * @param sock the socket file descriptor
+ * @param file_data the file data to send
+ */
+void send_file(int sock, char *file_data) {
+  size_t message_len = strlen(file_data);
+  size_t bytes_sent = 0;
+
+  // loop until all the data is sent
+  while (bytes_sent < message_len) {
+    // send the data
+    ssize_t result =
+        send(sock, file_data + bytes_sent, message_len - bytes_sent, 0);
+    if (result < 0) {  // if an error occurred
+      break;
+    }
+    // update the number of bytes sent
+    bytes_sent += result;
+  }
+}
+
+/**
+ * Send an exit message to the receiver.
+ *
+ * @param sock the socket file descriptor
+ */
+void send_exit_message(int sock) {
+  char message[] = EXIT_MESSAGE;
+  send(sock, message, strlen(message), 0);
 }
