@@ -35,6 +35,7 @@ int RUDP_send(int socket, char *data, int data_length) {
   int last_packet_size = data_length % WINDOW_MAX_SIZE;
   for (int i = 0; i < packets_num; i++) {
     RUDP packet;
+    memset(&packet, 0, sizeof(packet));
     packet.seq_num = i;
     packet.flags.DATA = 1;
     packet.checksum = checksum(&packet);
@@ -70,9 +71,9 @@ int checksum(RUDP *packet) {
   }
   return sum;
 }
-RUDP *packetReply;
 
 int wait_for_ack(int socket, int seq_num, clock_t start_time, int timeout) {
+  RUDP *packetReply;
   while (clock() - start_time < timeout) {
     int recvLen =
         recvfrom(socket, packetReply, sizeof(packetReply) - 1, 0, NULL, 0);
