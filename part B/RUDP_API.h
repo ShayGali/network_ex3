@@ -1,3 +1,6 @@
+
+#define RETRY 3
+
 typedef struct RUDP_flags {
   unsigned int SYN : 1;
   unsigned int ACK : 1;
@@ -21,12 +24,10 @@ int RUDP_socket(char *ip, int port);
 
 /**
  * opening a connection between two peers.
+ * (a connection is established with 2 way handshake - SYN, SYN-ACK)
  *
- * הפונקציה תשלח הודעה עם
- * SYN
- * ותחכה לקבלת הודעה עם
- * SYN + ACK
- *
+ * @param socket - the socket to connect to.
+ * @return 1 is success, 0 if failed.
  */
 int RUDP_connect(int socket);
 

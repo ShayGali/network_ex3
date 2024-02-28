@@ -28,6 +28,41 @@ int RUDP_socket(char *ip, int port) {
   return send_socket;
 }
 
+int RUDP_connect(int socket) {
+  // send SYN message
+  RUDP *packet;
+  memset(packet, 0, sizeof(packet));
+  packet->flags.SYN = 1;
+
+  int total_tries = 0;
+  while (total_tries < RETRY) {
+    int send_result = sendto(socket, packet, sizeof(packet), 0, NULL, 0);
+    if (send_result == -1) {
+      perror("sendto failed");
+      return 0;
+    }
+
+    // receive SYN-ACK message
+    RUDP *recv_packet;
+    memset(recv_packet, 0, sizeof(recv_packet));
+    int recv_result =
+        recvfrom(socket, recv_packet, sizeof(recv_packet), 0, NULL, 0);
+    if (recv_result == -1) {
+      perror("recvfrom failed");
+      return 0;
+    }
+    if (recv_packet->flags.SYN && recv_packet->flags.ACK) {
+      return 1;
+    } else {
+      printf("received wrong packet when trying to connect");
+    }
+    total_tries++;
+  }
+
+  // failed to connect
+  return 0;
+}
+
 int checksum(RUDP *packet) {
   int sum = 0;
   for (int i = 0; i < 10 && i < sizeof(packet->data); i++) {
