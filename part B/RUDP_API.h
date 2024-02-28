@@ -20,6 +20,17 @@ two peers.
 int RUDP_socket(char *ip, int port);
 
 /**
+ * opening a connection between two peers.
+ *
+ * הפונקציה תשלח הודעה עם
+ * SYN
+ * ותחכה לקבלת הודעה עם
+ * SYN + ACK
+ *
+ */
+int RUDP_connect(int socket);
+
+/**
  * Sending data to the peer.
  *  The function should wait for an acknowledgment packet, and if it didn’t
  * receive any, retransmits the data.
