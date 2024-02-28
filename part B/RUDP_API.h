@@ -35,5 +35,3 @@ int RUDP_receive(int socket, char *data, int data_length);
  * Closing the RUDP socket.
  */
 int RUDP_close(int socket);
-
-int send_UDP();
