@@ -1,12 +1,23 @@
+typedef struct RUDP_flags {
+  unsigned int SYN : 1;
+  unsigned int ACK : 1;
+  unsigned int DATA : 1;
+  unsigned int FIN : 1;
+} RUDP_flags;
 
 typedef struct _RUDP {
+  RUDP_flags flags;
+  int seq_num;
+  int checksum;
+  int length;
+  char data[1024];
 } RUDP;
 
 /**
  * Creating a RUDP socket and creating a handshake between
 two peers.
 */
-int RUDP_socket(char *ip,int port);
+int RUDP_socket(char *ip, int port);
 
 /**
  * Sending data to the peer.
