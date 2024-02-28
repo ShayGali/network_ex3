@@ -215,7 +215,7 @@ int parse_args(int argc, char *argv[], int *port, char **algo) {
                     // check if the user passed the correct arguments
       (strcmp(argv[1], "-p") != 0 && strcmp(argv[1], "-algo") != 0) ||
       (strcmp(argv[3], "-p") != 0 && strcmp(argv[3], "-algo") != 0)) {
-    printf("Invalid arguments.\nUsage: %s -p <port> -algo algorithm\n",
+    printf("Invalid arguments.\nUsage: %s -p <port> -algo <algorithm>\n",
            argv[0]);
     return 0;
   }

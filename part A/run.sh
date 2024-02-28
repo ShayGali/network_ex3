@@ -1,10 +1,9 @@
 #! /bin/bash
-PORT="5060"
 
 make all
 echo "Running TCP_Reciever"
-./TCP_Reciever -p $PORT -algo reno
+./TCP_Reciever -p 5050 -algo reno
 echo "Running TCP_Sender"
-./TCP_Sender -p $PORT -algo cubic
+./TCP_Sender -ip 127.0.0.1 -p 5050 -algo ren
 
 make clean
