@@ -18,9 +18,8 @@ typedef struct _RUDP {
 } RUDP;
 
 /**
- * Creating a RUDP socket and creating a handshake between
-two peers.
-*/
+ * Creating a RUDP socket and creating a handshake between two peers.
+ */
 int RUDP_socket(char *ip, int port);
 
 /**
