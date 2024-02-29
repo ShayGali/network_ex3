@@ -122,3 +122,21 @@ int wait_for_ack(int socket, int seq_num, clock_t start_time, int timeout) {
   }
   return -1;
 }
+
+int RUDP_close(int socket) {
+  RUDP *close_packet;
+  memset(close_packet, 0, sizeof(close_packet));
+  close_packet->flags.FIN = 1;
+  close_packet->seq_num = -1;
+  close_packet->checksum = checksum(close_packet);
+  do {
+    int sendResult =
+        sendto(socket, close_packet, sizeof(close_packet), 0, NULL, 0);
+    if (sendResult == -1) {
+      printf("sendto() failed with error code  : %d", errno);
+      return -1;
+    }
+  } while (wait_for_ack(socket, -1, clock(), TIMEOUT) == -1);
+  close(socket);
+  return 0;
+}
