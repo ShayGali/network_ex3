@@ -92,6 +92,9 @@ int RUDP_send(int socket, char *data, int data_length) {
     memset(&packet, 0, sizeof(packet));
     packet.seq_num = i;
     packet.flags.DATA = 1;
+    if (i == packets_num - 1 && last_packet_size == 0) {
+      packet.flags.FIN = 1;
+    }
     packet.checksum = checksum(&packet);
     memcpy(packet.data, data + i * WINDOW_MAX_SIZE, WINDOW_MAX_SIZE);
     do {
@@ -104,7 +107,10 @@ int RUDP_send(int socket, char *data, int data_length) {
   }
   if (last_packet_size > 0) {
     RUDP packet;
+    memset(&packet, 0, sizeof(packet));
     packet.seq_num = packets_num;
+    packet.flags.DATA = 1;
+    packet.flags.FIN = 1;
     packet.checksum = checksum(&packet);
     memcpy(packet.data, data + packets_num * WINDOW_MAX_SIZE, last_packet_size);
     do {
@@ -139,6 +145,10 @@ int RUDP_receive(int socket, char *data, int data_length) {
   if (packet->flags.DATA == 1) {  // data packet
     memcpy(data, packet->data, sizeof(packet->data));
     return 1;
+  }
+  if (packet->flags.FIN == 1 && packet->flags.DATA == 1) {  // last packet
+    memcpy(data, packet->data, sizeof(packet->data));
+    return 2;
   }
   if (packet->flags.FIN == 1) {  // close request
     clock_t FIN_send_time = clock();
