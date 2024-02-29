@@ -190,7 +190,7 @@ int checksum(RUDP *packet) {
 
 int wait_for_ack(int socket, int seq_num, clock_t start_time, int timeout) {
   RUDP *packetReply;
-  while (clock() - start_time < timeout) {
+  while ((double)(clock() - start_time) / CLOCKS_PER_SEC < timeout) {
     int recvLen =
         recvfrom(socket, packetReply, sizeof(packetReply) - 1, 0, NULL, 0);
     if (recvLen == -1) {
