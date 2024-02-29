@@ -11,13 +11,13 @@ where:
 */
 #include <arpa/inet.h>
 #include <errno.h>
+#include <netinet/tcp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <time.h>
 #include <unistd.h>
-
 // the exit message that the sender will send
 #define EXIT_MESSAGE "exit"
 
@@ -40,6 +40,12 @@ int main(int argc, char *argv[]) {
   // create a TCP socket between the receiver and the sender
   int sock = connect_to_sender(port);
   if (sock == -1) {
+    return 1;
+  }
+
+  // define the congestion control algorithm used by a socket
+  if (setsockopt(sock, IPPROTO_TCP, TCP_CONGESTION, algo, strlen(algo)) < 0) {
+    perror("setsockopt");
     return 1;
   }
 
