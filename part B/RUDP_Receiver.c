@@ -23,25 +23,32 @@ int main(int argc, char* argv[]) {
   double average_time = 0;
   double average_speed = 0;
   clock_t start, end;
+
   char* date_received;
   char* total_date = "";
   int rval = 0;
   int run = 1;
+
   start = clock();
   end = clock();
+
   do {
     rval = RUDP_receive(socket, date_received, sizeof(date_received));
     if (rval == -1) {
       printf("Error receiving data\n");
       return -1;
     }
-    if (rval == 1 && start < end) {
+    if (rval == 1 &&
+        start <
+            end) {  // if the data received is the first one, start the timer
       start = clock();
     }
-    if (rval == 1) {
+    if (rval == 1) {  // if the data received is not the last one, add it to the
+                      // total data
       strcat(total_date, date_received);
     }
-    if (rval == 2) {
+    if (rval == 2) {  // if the data received is the last one, take it and write
+                      // the stats it to the file
       strcat(total_date, date_received);
       printf("Received date: %s\n", sizeof(total_date));
       end = clock();
@@ -51,10 +58,13 @@ int main(int argc, char* argv[]) {
       average_speed += speed;
       fprintf(file, "Run #%d Data: Time=%f S ; Speed=%f MB/S\n", run,
               time_taken, speed);
+      total_date = "";
       run++;
     }
-  } while (rval >= 0);
-  if (rval == -2) {
+  } while (rval >= 0);  //   keep the loop until the connection is closed
+
+  if (rval ==
+      -2) {  // check if the connection was closed by the sender and print stats
     printf("connection closed\n");
     // add the average time and speed to the file
     fprintf(file, "\n");
