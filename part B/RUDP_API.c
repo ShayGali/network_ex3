@@ -17,7 +17,7 @@ int checksum(RUDP *packet);
 int wait_for_ack(int socket, int seq_num, clock_t start_time, int timeout);
 int send_ack(int socket, RUDP *packet);
 
-int RUDP_socket(char *ip, int port) {
+int RUDP_socket(char *ip, int port) {  // open RUDP socket
   int send_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if (send_socket == -1) {
     printf("Could not create socket : %d", errno);
@@ -32,12 +32,14 @@ int RUDP_socket(char *ip, int port) {
     printf("inet_pton() failed");
     return -1;
   }
+  // connect to the receiver to avoid specifying the address in each operation
   if (connect(send_socket, (struct sockaddr *)&serverAddress,
               sizeof(serverAddress)) < 0) {
     perror("UDP connect failed");
     return -1;
   }
 
+  // set timeout for the socket
   struct timeval timeout;
   timeout.tv_sec = TIMEOUT;
   timeout.tv_usec = 0;
@@ -57,7 +59,7 @@ int RUDP_connect(int socket) {
   packet->flags.SYN = 1;
 
   int total_tries = 0;
-  while (total_tries < RETRY) {
+  while (total_tries < RETRY) {  // try to connect RETRY times
     int send_result = sendto(socket, packet, sizeof(packet), 0, NULL, 0);
     if (send_result == -1) {
       perror("sendto failed");
@@ -88,6 +90,7 @@ int RUDP_connect(int socket) {
   return -1;
 }
 
+// devide the data into packets and send them
 int RUDP_send(int socket, char *data, int data_length) {
   int packets_num = data_length / WINDOW_MAX_SIZE;
   int last_packet_size = data_length % WINDOW_MAX_SIZE;
@@ -107,6 +110,7 @@ int RUDP_send(int socket, char *data, int data_length) {
         printf("sendto() failed with error code  : %d", errno);
         return -1;
       }
+      // wait for ack and retransmit if needed
     } while (wait_for_ack(socket, i, clock(), TIMEOUT) == -1);
   }
   if (last_packet_size > 0) {
@@ -136,6 +140,8 @@ int RUDP_receive(int socket, char *data, int data_length) {
     printf("recvfrom() failed with error code  : %d", errno);
     return -1;
   }
+
+  // check if the packet is corrupted, and send ack
   if (checksum(packet) != packet->checksum) {
     return -1;
   }
@@ -156,6 +162,8 @@ int RUDP_receive(int socket, char *data, int data_length) {
   }
   if (packet->flags.FIN == 1) {  // close request
     clock_t FIN_send_time = clock();
+
+    // send ack and wait for TIMEOUT*10 seconds to check if the sender closed
     while ((double)(clock() - FIN_send_time) / CLOCKS_PER_SEC < TIMEOUT * 10) {
       RUDP *packet;
       memset(packet, 0, sizeof(packet));
@@ -177,6 +185,7 @@ int RUDP_receive(int socket, char *data, int data_length) {
   return 0;
 }
 
+// close the connection
 int RUDP_close(int socket) {
   RUDP *close_packet;
   memset(close_packet, 0, sizeof(close_packet));
@@ -195,6 +204,7 @@ int RUDP_close(int socket) {
   return 0;
 }
 
+// calculate the checksum of the packet in the most simple way !!!
 int checksum(RUDP *packet) {
   int sum = 0;
   for (int i = 0; i < 10 && i < sizeof(packet->data); i++) {
