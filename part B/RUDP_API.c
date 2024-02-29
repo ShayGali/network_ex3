@@ -99,6 +99,64 @@ int RUDP_send(int socket, char *data, int data_length) {
   return 0;
 }
 
+int RUDP_receive(int socket, char *data, int data_length) {
+  RUDP *packet;
+  memset(packet, 0, sizeof(packet));
+  int recvLen = recvfrom(socket, packet, sizeof(packet) - 1, 0, NULL, 0);
+  if (recvLen == -1) {
+    printf("recvfrom() failed with error code  : %d", errno);
+    return -1;
+  }
+  if (checksum(packet) != packet->checksum) {
+    return -1;
+  }
+  if (send_ack(socket, packet) == -1) {
+    return -1;
+  }
+  if (packet->flags.DATA == 1) {
+    memcpy(data, packet->data, sizeof(packet->data));
+    return 0;
+  }
+  if (packet->flags.FIN == 1) {
+    clock_t FIN_send_time = clock();
+    while (clock() - FIN_send_time < TIMEOUT * 10) {
+      RUDP *packet;
+      memset(packet, 0, sizeof(packet));
+      int recvLen = recvfrom(socket, packet, sizeof(packet) - 1, 0, NULL, 0);
+      if (recvLen == -1) {
+        printf("recvfrom() failed with error code  : %d", errno);
+        return -1;
+      }
+      if (packet->flags.FIN == 1) {
+        if (send_ack(socket, packet) == -1) {
+          return -1;
+        }
+        FIN_send_time = clock();
+      }
+    }
+    return -1;
+  }
+  return 0;
+}
+
+int RUDP_close(int socket) {
+  RUDP *close_packet;
+  memset(close_packet, 0, sizeof(close_packet));
+  close_packet->flags.FIN = 1;
+  close_packet->seq_num = -1;
+  close_packet->checksum = checksum(close_packet);
+  do {
+    int sendResult =
+        sendto(socket, close_packet, sizeof(close_packet), 0, NULL, 0);
+    if (sendResult == -1) {
+      printf("sendto() failed with error code  : %d", errno);
+      return -1;
+    }
+  } while (wait_for_ack(socket, -1, clock(), TIMEOUT) == -1);
+  close(socket);
+  return 0;
+}
+
 int checksum(RUDP *packet) {
   int sum = 0;
   for (int i = 0; i < 10 && i < sizeof(packet->data); i++) {
@@ -123,20 +181,25 @@ int wait_for_ack(int socket, int seq_num, clock_t start_time, int timeout) {
   return -1;
 }
 
-int RUDP_close(int socket) {
-  RUDP *close_packet;
-  memset(close_packet, 0, sizeof(close_packet));
-  close_packet->flags.FIN = 1;
-  close_packet->seq_num = -1;
-  close_packet->checksum = checksum(close_packet);
-  do {
-    int sendResult =
-        sendto(socket, close_packet, sizeof(close_packet), 0, NULL, 0);
-    if (sendResult == -1) {
-      printf("sendto() failed with error code  : %d", errno);
-      return -1;
-    }
-  } while (wait_for_ack(socket, -1, clock(), TIMEOUT) == -1);
-  close(socket);
+int send_ack(int socket, RUDP *packet) {
+  RUDP *ack_packet;
+  memset(ack_packet, 0, sizeof(ack_packet));
+  ack_packet->flags.ACK = 1;
+  if (packet->flags.FIN == 1) {
+    ack_packet->flags.FIN = 1;
+  }
+  if (packet->flags.SYN == 1) {
+    ack_packet->flags.SYN = 1;
+  }
+  if (packet->flags.DATA == 1) {
+    ack_packet->flags.DATA = 1;
+  }
+  ack_packet->seq_num = packet->seq_num;
+  ack_packet->checksum = checksum(ack_packet);
+  int sendResult = sendto(socket, ack_packet, sizeof(ack_packet), 0, NULL, 0);
+  if (sendResult == -1) {
+    printf("sendto() failed with error code  : %d", errno);
+    return -1;
+  }
   return 0;
 }
