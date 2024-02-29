@@ -13,6 +13,12 @@
 #define SERVER_IP_ADDRESS "127.0.0.1"
 #define SERVER_PORT 5060
 #define BUFFER_SIZE 1024
+
+typedef struct data {
+  int id;
+  char message[40];
+} Data;
+
 int main() {
   // Create socket
   int send_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -37,12 +43,18 @@ int main() {
   }
 
   // send the message
-  char message[] = "My name is ShayG";
-  int messageLen = strlen(message) + 1;
+  char message[] = "GGGGG";
+  Data *data = (Data *)malloc(sizeof(Data));
+  data->id = 2;
+  strcpy(data->message, message);
+  int messageLen = sizeof(Data);
 
   int sendResult =
-      sendto(send_socket, message, messageLen, 0,
+      sendto(send_socket, data, messageLen, 0,
              (struct sockaddr *)&serverAddress, sizeof(serverAddress));
+
+  free(data);
+
   if (sendResult == -1) {
     printf("sendto() failed with error code  : %d", errno);
     return -1;
