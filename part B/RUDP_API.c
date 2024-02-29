@@ -41,28 +41,31 @@ int RUDP_connect(int socket) {
     int send_result = sendto(socket, packet, sizeof(packet), 0, NULL, 0);
     if (send_result == -1) {
       perror("sendto failed");
-      return 0;
+      return -1;
     }
-
-    // receive SYN-ACK message
-    RUDP *recv_packet;
-    memset(recv_packet, 0, sizeof(recv_packet));
-    int recv_result =
-        recvfrom(socket, recv_packet, sizeof(recv_packet), 0, NULL, 0);
-    if (recv_result == -1) {
-      perror("recvfrom failed");
-      return 0;
-    }
-    if (recv_packet->flags.SYN && recv_packet->flags.ACK) {
-      return 1;
-    } else {
-      printf("received wrong packet when trying to connect");
-    }
+    clock_t start_time = clock();
+    do {
+      // receive SYN-ACK message
+      RUDP *recv_packet;
+      memset(recv_packet, 0, sizeof(recv_packet));
+      int recv_result =
+          recvfrom(socket, recv_packet, sizeof(recv_packet), 0, NULL, 0);
+      if (recv_result == -1) {
+        perror("recvfrom failed");
+        return -1;
+      }
+      if (recv_packet->flags.SYN && recv_packet->flags.ACK) {
+        printf("connected");
+        return 0;
+      } else {
+        printf("received wrong packet when trying to connect");
+      }
+    } while (clock() - start_time < TIMEOUT);
     total_tries++;
   }
 
-  // failed to connect
-  return 0;
+  printf("could not connect to receiver");
+  return -1;
 }
 
 int RUDP_send(int socket, char *data, int data_length) {
@@ -113,11 +116,15 @@ int RUDP_receive(int socket, char *data, int data_length) {
   if (send_ack(socket, packet) == -1) {
     return -1;
   }
-  if (packet->flags.DATA == 1) {
+  if (packet->flags.SYN == 1) {  // connection request
+    printf("received connection request");
+    return 0;
+  }
+  if (packet->flags.DATA == 1) {  // data packet
     memcpy(data, packet->data, sizeof(packet->data));
     return 0;
   }
-  if (packet->flags.FIN == 1) {
+  if (packet->flags.FIN == 1) {  // close request
     clock_t FIN_send_time = clock();
     while (clock() - FIN_send_time < TIMEOUT * 10) {
       RUDP *packet;
