@@ -157,7 +157,7 @@ int RUDP_receive(int socket, char *data, int data_length) {
         FIN_send_time = clock();
       }
     }
-    return -1;
+    return -2;
   }
   return 0;
 }
