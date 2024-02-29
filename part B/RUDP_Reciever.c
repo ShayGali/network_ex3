@@ -5,14 +5,19 @@
 
 int main(int argc, char* argv[]) {
   printf("~~~~~~~~ RUDP Receiver ~~~~~~~~\n");
-  int port;
-  int socket =
-      RUDP_socket(argv[1], port);  // !!!! צריך לתקן, אוליי להוסיף parse_args
+  int port = atoi(argv[2]);
+  int socket = RUDP_socket();
   if (socket == -1) {
     printf("Could not create socket\n");
     return -1;
   }
   printf("Socket created\n");
+
+  int rval = RUDP_get_connection(socket, port);
+  if (rval == 0) {
+    printf("Could not get connection\n");
+    return -1;
+  }
 
   FILE* file = fopen("stats", "w+");
   if (file == NULL) {
@@ -34,7 +39,7 @@ int main(int argc, char* argv[]) {
 
   do {
     rval = RUDP_receive(socket, date_received, sizeof(date_received));
-    if (rval == -1) {
+    if (rval <= 0) {
       printf("Error receiving data\n");
       return -1;
     }

@@ -42,6 +42,9 @@ int main() {
     return -1;
   }
 
+  connect(send_socket, (struct sockaddr *)&serverAddress,
+          sizeof(serverAddress));
+
   // send the message
   char message[] = "GGGGG";
   Data *data = (Data *)malloc(sizeof(Data));
@@ -53,6 +56,8 @@ int main() {
       sendto(send_socket, data, messageLen, 0,
              (struct sockaddr *)&serverAddress, sizeof(serverAddress));
 
+  data->id = 3;
+  sendto(send_socket, data, messageLen, 0, NULL, 0);
   free(data);
 
   if (sendResult == -1) {
