@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
@@ -29,7 +30,17 @@ int RUDP_socket(char *ip, int port) {
   }
   if (connect(send_socket, (struct sockaddr *)&serverAddress,
               sizeof(serverAddress)) < 0) {
-    perror("connect failed");
+    perror("UDP connect failed");
+    return -1;
+  }
+
+  struct timeval timeout;
+  timeout.tv_sec = TIMEOUT;  // Timeout in seconds
+  timeout.tv_usec = 0;
+
+  if (setsockopt(send_socket, SOL_SOCKET, SO_RCVTIMEO, &timeout,
+                 sizeof(timeout)) < 0) {
+    perror("Error setting timeout for socket");
     return -1;
   }
   return send_socket;
