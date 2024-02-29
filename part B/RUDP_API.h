@@ -1,5 +1,6 @@
 
 #define RETRY 3
+#define WINDOW_MAX_SIZE 1024
 
 typedef struct RUDP_flags {
   unsigned int SYN : 1;
@@ -13,7 +14,7 @@ typedef struct _RUDP {
   int seq_num;
   int checksum;
   int length;
-  char data[1024];
+  char data[WINDOW_MAX_SIZE];
 } RUDP;
 
 /**

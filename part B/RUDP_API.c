@@ -8,8 +8,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#define WINDOW_MAX_SIZE 1024  // CHECK
-
 int RUDP_socket(char *ip, int port) {
   int send_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if (send_socket == -1) {
