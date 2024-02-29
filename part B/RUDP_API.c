@@ -13,6 +13,10 @@
 #define WINDOW_MAX_SIZE 1024  // CHECK
 #define TIMEOUT 1000          // Timeout in seconds
 
+int checksum(RUDP *packet);
+int wait_for_ack(int socket, int seq_num, clock_t start_time, int timeout);
+int send_ack(int socket, RUDP *packet);
+
 int RUDP_socket(char *ip, int port) {
   int send_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if (send_socket == -1) {
