@@ -134,11 +134,11 @@ int RUDP_receive(int socket, char *data, int data_length) {
   }
   if (packet->flags.SYN == 1) {  // connection request
     printf("received connection request");
-    return 1;
+    return 0;
   }
   if (packet->flags.DATA == 1) {  // data packet
     memcpy(data, packet->data, sizeof(packet->data));
-    return 0;
+    return 1;
   }
   if (packet->flags.FIN == 1) {  // close request
     clock_t FIN_send_time = clock();
