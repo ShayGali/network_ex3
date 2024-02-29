@@ -58,3 +58,8 @@ int checksum(RUDP *packet);
  *  or the sequence number is not the same, returns -1.
  */
 int wait_for_ack(int socket, int seq_num, clock_t start_time, int timeout);
+
+/**
+ * Sending an acknowledgment packet.
+ */
+int send_ack(int socket, RUDP *packet);
