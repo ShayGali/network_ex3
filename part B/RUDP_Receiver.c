@@ -28,11 +28,15 @@ int main(int argc, char* argv[]) {
   int rval = 0;
   int run = 1;
   start = clock();
+  end = clock();
   do {
     rval = RUDP_receive(socket, date_received, sizeof(date_received));
     if (rval == -1) {
       printf("Error receiving data\n");
       return -1;
+    }
+    if (rval == 1 && start < end) {
+      start = clock();
     }
     if (rval == 1) {
       strcat(total_date, date_received);
@@ -48,7 +52,6 @@ int main(int argc, char* argv[]) {
       fprintf(file, "Run #%d Data: Time=%f S ; Speed=%f MB/S\n", run,
               time_taken, speed);
       run++;
-      start = clock();
     }
   } while (rval >= 0);
   if (rval == -2) {
