@@ -47,19 +47,3 @@ int RUDP_receive(int socket, char *data, int data_length);
  * Closing the RUDP socket.
  */
 int RUDP_close(int socket);
-
-/**
- * clculating the checksum of the packet.
- */
-int checksum(RUDP *packet);
-
-/**
- * Sender waits for an acknowledgment packet, and if the timeout expires,
- *  or the sequence number is not the same, returns -1.
- */
-int wait_for_ack(int socket, int seq_num, clock_t start_time, int timeout);
-
-/**
- * Sending an acknowledgment packet.
- */
-int send_ack(int socket, RUDP *packet);
