@@ -27,6 +27,11 @@ int RUDP_socket(char *ip, int port) {
     printf("inet_pton() failed");
     return -1;
   }
+  if (connect(send_socket, (struct sockaddr *)&serverAddress,
+              sizeof(serverAddress)) < 0) {
+    perror("connect failed");
+    return -1;
+  }
   return send_socket;
 }
 
