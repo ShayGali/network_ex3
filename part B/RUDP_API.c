@@ -11,7 +11,7 @@
 #include <unistd.h>
 
 #define WINDOW_MAX_SIZE 1024  // CHECK
-#define TIMEOUT 1000
+#define TIMEOUT 1000          // Timeout in seconds
 
 int RUDP_socket(char *ip, int port) {
   int send_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -35,7 +35,7 @@ int RUDP_socket(char *ip, int port) {
   }
 
   struct timeval timeout;
-  timeout.tv_sec = TIMEOUT;  // Timeout in seconds
+  timeout.tv_sec = TIMEOUT;
   timeout.tv_usec = 0;
 
   if (setsockopt(send_socket, SOL_SOCKET, SO_RCVTIMEO, &timeout,
@@ -76,7 +76,7 @@ int RUDP_connect(int socket) {
       } else {
         printf("received wrong packet when trying to connect");
       }
-    } while (clock() - start_time < TIMEOUT);
+    } while ((double)(clock() - start_time) / CLOCKS_PER_SEC < TIMEOUT);
     total_tries++;
   }
 
@@ -142,7 +142,7 @@ int RUDP_receive(int socket, char *data, int data_length) {
   }
   if (packet->flags.FIN == 1) {  // close request
     clock_t FIN_send_time = clock();
-    while (clock() - FIN_send_time < TIMEOUT * 10) {
+    while ((double)(clock() - FIN_send_time) / CLOCKS_PER_SEC < TIMEOUT * 10) {
       RUDP *packet;
       memset(packet, 0, sizeof(packet));
       int recvLen = recvfrom(socket, packet, sizeof(packet) - 1, 0, NULL, 0);
