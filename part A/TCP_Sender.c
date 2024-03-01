@@ -133,7 +133,7 @@ void send_file(int sock, char *file_data) {
  * @param sock the socket file descriptor
  */
 void send_exit_message(int sock) {
-  send(sock, EXIT_MESSAGE, strlen(EXIT_MESSAGE), 0);
+  send(sock, EXIT_MESSAGE, strlen(EXIT_MESSAGE) + 1, 0);
 }
 
 /**

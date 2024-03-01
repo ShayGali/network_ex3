@@ -1,4 +1,7 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 
 #include "RUDP_API.h"
 
@@ -6,7 +9,9 @@
 #define EXIT_MESSAGE "exit"
 
 int parse_args(int argc, char *argv[], char **ip, int *port);
-int connect_to_recv(ip, port);
+int connect_to_recv(char *ip, int port);
+char *util_generate_random_data(unsigned int size);
+
 int main(int argc, char *argv[]) {
   // Parse the command line arguments
   char *ip;
@@ -23,6 +28,21 @@ int main(int argc, char *argv[]) {
   if (sock == -1) {
     return 1;
   }
+
+  int choice;
+  do {
+    if (RUDP_send(sock, file_data, FILE_SIZE) < 0) {
+      printf("Error sending the file\n");
+      RUDP_close(sock);
+      return 1;
+    }
+    printf("Do you want to send the file again? (1/0): ");
+    scanf("%d", &choice);
+  } while (choice == 1);
+
+  RUDP_send(sock, EXIT_MESSAGE, strlen(EXIT_MESSAGE) + 1);
+  RUDP_close(sock);
+  free(file_data);
   return 0;
 }
 
@@ -32,11 +52,11 @@ int main(int argc, char *argv[]) {
  * @return the socket file descriptor, -1 if an error occurred
  */
 int connect_to_recv(char *ip, int port) {
-  int sock = RUDP_socket(ip, port);
+  int sock = RUDP_socket();
   if (sock == -1) {
     return -1;
   }
-  if (!RUDP_connect(sock)) {
+  if (RUDP_connect(sock, ip, port) <= 0) {
     return -1;
   }
   return sock;

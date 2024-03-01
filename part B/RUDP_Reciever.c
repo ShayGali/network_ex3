@@ -31,7 +31,8 @@ int main(int argc, char* argv[]) {
   double average_speed = 0;
   clock_t start, end;
 
-  char* date_received;
+  char* date_received = NULL;
+  int data_length = 0;
   char* total_date = "";
   rval = 0;
   int run = 1;
@@ -40,7 +41,7 @@ int main(int argc, char* argv[]) {
   end = clock();
 
   do {
-    rval = RUDP_receive(socket, date_received, sizeof(date_received));
+    rval = RUDP_receive(socket, &date_received, &data_length);
     if (rval <= 0) {
       printf("Error receiving data\n");
       return -1;

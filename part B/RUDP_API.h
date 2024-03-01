@@ -17,7 +17,7 @@ typedef struct _RUDP {
   RUDP_flags flags;
   int seq_num;
   int checksum;
-  int length;
+  int length;  // the length of the data
   char data[WINDOW_MAX_SIZE];
 } RUDP;
 
@@ -59,13 +59,15 @@ int RUDP_send(int socket, char *data, int data_length);
 
 /**
  * Receiving data from the peer.
+ * will put the received data in the data parameter, and the length of the data
+ * in the data_length parameter.
  *
  * @param socket - the socket to receive from.
  * @param data - the data to receive.
  * @param data_length - the length of the data.
  * @return 1 is success, 0 if failed.
  */
-int RUDP_receive(int socket, char *data, int data_length);
+int RUDP_receive(int socket, char **data, int *data_length);
 
 /**
  * Closing the RUDP socket.
