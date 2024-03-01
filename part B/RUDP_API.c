@@ -10,8 +10,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#define WINDOW_MAX_SIZE 1024  // CHECK
-#define TIMEOUT 1000          // Timeout in seconds
+#define TIMEOUT 1000  // Timeout in seconds
 
 int checksum(RUDP *packet);
 int wait_for_ack(int socket, int seq_num, clock_t start_time, int timeout);

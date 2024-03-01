@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 #include "RUDP_API.h"
@@ -31,7 +33,7 @@ int main(int argc, char* argv[]) {
 
   char* date_received;
   char* total_date = "";
-  int rval = 0;
+  rval = 0;
   int run = 1;
 
   start = clock();
@@ -55,7 +57,7 @@ int main(int argc, char* argv[]) {
     if (rval == 2) {  // if the data received is the last one, take it and write
                       // the stats it to the file
       strcat(total_date, date_received);
-      printf("Received date: %s\n", sizeof(total_date));
+      printf("Received date: %zu\n", sizeof(total_date));
       end = clock();
       double time_taken = ((double)(end - start)) / CLOCKS_PER_SEC;
       average_time += time_taken;
