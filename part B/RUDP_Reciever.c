@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
     printf("Could not get connection\n");
     return -1;
   }
-
+  printf("Connection established\n");
   FILE* file = fopen("stats", "w+");
   if (file == NULL) {
     printf("Error opening  stats file!\n");
@@ -41,6 +41,7 @@ int main(int argc, char* argv[]) {
   end = clock();
 
   do {
+    printf("Receiving data\n");
     rval = RUDP_receive(socket, &date_received, &data_length);
     if (rval <= 0) {
       printf("Error receiving data\n");

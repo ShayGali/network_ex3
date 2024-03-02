@@ -51,11 +51,16 @@ int RUDP_connect(int socket, char *ip, int port) {
     return ERROR;
   }
 
+  if (connect(socket, (struct sockaddr *)&serverAddress,
+              sizeof(serverAddress)) == -1) {
+    perror("connect failed");
+    return ERROR;
+  }
+
   // send SYN message
   RUDP *packet = malloc(sizeof(RUDP));
   memset(packet, 0, sizeof(RUDP));
   packet->flags.SYN = 1;
-
   int total_tries = 0;
   RUDP *recv_packet = NULL;
   while (total_tries < RETRY) {
@@ -78,7 +83,7 @@ int RUDP_connect(int socket, char *ip, int port) {
         return ERROR;
       }
       if (recv_packet->flags.SYN && recv_packet->flags.ACK) {
-        printf("connected");
+        printf("connected\n");
         free(packet);
         free(recv_packet);
         return SUCCESS;
@@ -163,14 +168,14 @@ int RUDP_send(int socket, char *data, int data_length) {
   int last_packet_size = data_length % WINDOW_MAX_SIZE;
   RUDP *packet = malloc(sizeof(RUDP));
   for (int i = 0; i < packets_num; i++) {
-    memset(&packet, 0, sizeof(RUDP));
+    memset(packet, 0, sizeof(RUDP));
     packet->seq_num = i;
     packet->flags.DATA = 1;
     if (i == packets_num - 1 && last_packet_size == 0) {
       packet->flags.FIN = 1;
     }
-    packet->checksum = checksum(packet);
     memcpy(packet->data, data + i * WINDOW_MAX_SIZE, WINDOW_MAX_SIZE);
+    packet->checksum = checksum(packet);
     do {
       int sendResult = sendto(socket, packet, sizeof(RUDP), 0, NULL, 0);
       if (sendResult == -1) {
@@ -181,7 +186,7 @@ int RUDP_send(int socket, char *data, int data_length) {
     } while (wait_for_ack(socket, i, clock(), TIMEOUT) <= 0);
   }
   if (last_packet_size > 0) {
-    memset(&packet, 0, sizeof(RUDP));
+    memset(packet, 0, sizeof(RUDP));
     packet->seq_num = packets_num;
     packet->flags.DATA = 1;
     packet->flags.FIN = 1;
@@ -222,17 +227,19 @@ int RUDP_receive(int socket, char **data, int *data_length) {
     return -1;
   }
   if (packet->flags.SYN == 1) {  // connection request
-    printf("received connection request");
+    printf("received connection request\n");
     free(packet);
     return 0;
   }
   if (packet->flags.FIN == 1 && packet->flags.DATA == 1) {  // last packet
+    *data = malloc(packet->length);  // Allocate memory for data
     memcpy(*data, packet->data, packet->length);
     *data_length = packet->length;
     free(packet);
     return 2;
   }
-  if (packet->flags.DATA == 1) {  // data packet
+  if (packet->flags.DATA == 1) {     // data packet
+    *data = malloc(packet->length);  // Allocate memory for data
     memcpy(*data, packet->data, packet->length);
     *data_length = packet->length;
     free(packet);
@@ -240,9 +247,10 @@ int RUDP_receive(int socket, char **data, int *data_length) {
   }
   if (packet->flags.FIN == 1) {  // close request
     clock_t FIN_send_time = clock();
-
+    free(packet);
     // send ack and wait for TIMEOUT*10 seconds to check if the sender closed
     while ((double)(clock() - FIN_send_time) / CLOCKS_PER_SEC < TIMEOUT * 10) {
+      packet = malloc(sizeof(RUDP));
       memset(packet, 0, sizeof(RUDP));
       int recvLen = recvfrom(socket, packet, sizeof(RUDP) - 1, 0, NULL, 0);
       if (recvLen == -1) {
@@ -257,6 +265,7 @@ int RUDP_receive(int socket, char **data, int *data_length) {
         }
         FIN_send_time = clock();
       }
+      free(packet);
     }
     printf("received close request");
     free(packet);

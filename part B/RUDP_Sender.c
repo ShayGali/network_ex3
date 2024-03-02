@@ -31,6 +31,7 @@ int main(int argc, char *argv[]) {
 
   int choice;
   do {
+    printf("Sending the file\n");
     if (RUDP_send(sock, file_data, FILE_SIZE) < 0) {
       printf("Error sending the file\n");
       RUDP_close(sock);
