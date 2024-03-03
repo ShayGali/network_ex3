@@ -379,11 +379,10 @@ int set_timeout(int socket, int time) {
   timeout.tv_sec = time;
   timeout.tv_usec = 0;
 
-  // if (setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout))
-  // <
-  //     0) {
-  //   perror("Error setting timeout for socket");
-  //   return ERROR;
-  // }
+  if (setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) <
+      0) {
+    perror("Error setting timeout for socket");
+    return ERROR;
+  }
   return SUCCESS;
 }
