@@ -141,7 +141,7 @@ int RUDP_get_connection(int socket, int port) {
                           (struct sockaddr *)&clientAddress, &clientAddressLen);
 
   if (recv_len == -1) {
-    printf("recvfrom() failed with error code  : %d", errno);
+    printf("recvfrom() failed on receiving SYN with error code  : %d", errno);
     free(packet);
     return ERROR;
   }
@@ -231,7 +231,7 @@ int RUDP_receive(int socket, char **data, int *data_length) {
 
   int recvLen = recvfrom(socket, packet, sizeof(RUDP) - 1, 0, NULL, 0);
   if (recvLen == -1) {
-    printf("recvfrom() failed with error code  : %d", errno);
+    printf("recvfrom() failed on receiving data with error code  : %d", errno);
     free(packet);
     return -1;
   }
@@ -336,7 +336,8 @@ int wait_for_ack(int socket, int seq_num, clock_t start_time, int timeout) {
   while ((double)(clock() - start_time) / CLOCKS_PER_SEC < timeout) {
     int recvLen = recvfrom(socket, packetReply, sizeof(RUDP) - 1, 0, NULL, 0);
     if (recvLen == -1) {
-      printf("recvfrom() failed with error code  : %d", errno);
+      printf("recvfrom() failed on waiting for ack with error code  : %d",
+             errno);
       free(packetReply);
       return ERROR;
     }
