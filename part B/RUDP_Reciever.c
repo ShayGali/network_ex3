@@ -46,7 +46,7 @@ int main(int argc, char* argv[]) {
     if (rval == -2) {  // if the connection was closed by the sender
       break;
     }
-    if (rval <= 0) {
+    if (rval == -1) {
       printf("Error receiving data\n");
       return -1;
     }
@@ -64,7 +64,7 @@ int main(int argc, char* argv[]) {
     // the file
     if (rval == 2) {
       strcat(total_date, date_received);
-      printf("Received date: %zu\n", sizeof(total_date));
+      printf("Received total date: %zu\n", sizeof(total_date));
       end = clock();
       double time_taken = ((double)(end - start)) / CLOCKS_PER_SEC;
       average_time += time_taken;

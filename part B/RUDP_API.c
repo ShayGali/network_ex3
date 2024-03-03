@@ -17,6 +17,8 @@ int checksum(RUDP *packet);
 int wait_for_ack(int socket, int seq_num, clock_t start_time, int timeout);
 int send_ack(int socket, RUDP *packet);
 
+int sq_num = 0;
+
 void print_RUDP(RUDP *packet) {
   printf("RUDP Packet:\n");
   printf("  Flags:\n");
@@ -193,6 +195,7 @@ int RUDP_send(int socket, char *data, int data_length) {
     }
     memcpy(packet->data, data + i * WINDOW_MAX_SIZE, WINDOW_MAX_SIZE);
     packet->length = WINDOW_MAX_SIZE;
+    packet->length = WINDOW_MAX_SIZE;
     packet->checksum = checksum(packet);
     do {
       int sendResult = sendto(socket, packet, sizeof(RUDP), 0, NULL, 0);
@@ -210,6 +213,8 @@ int RUDP_send(int socket, char *data, int data_length) {
     packet->flags.FIN = 1;
     memcpy(packet->data, data + packets_num * WINDOW_MAX_SIZE,
            last_packet_size);
+    packet->length = last_packet_size;
+    packet->checksum = checksum(packet);
     packet->length = last_packet_size;
     packet->checksum = checksum(packet);
     do {
@@ -234,7 +239,6 @@ int RUDP_receive(int socket, char **data, int *data_length) {
     free(packet);
     return -1;
   }
-
   // check if the packet is corrupted, and send ack
   if (checksum(packet) != packet->checksum) {
     free(packet);
@@ -249,19 +253,26 @@ int RUDP_receive(int socket, char **data, int *data_length) {
     free(packet);
     return 0;
   }
-  if (packet->flags.FIN == 1 && packet->flags.DATA == 1) {  // last packet
-    *data = malloc(packet->length);  // Allocate memory for data
-    memcpy(*data, packet->data, packet->length);
-    *data_length = packet->length;
+  if (packet->seq_num == sq_num) {
+    if (packet->flags.FIN == 1 && packet->flags.DATA == 1) {  // last packet
+      *data = malloc(packet->length);  // Allocate memory for data
+      memcpy(*data, packet->data, packet->length);
+      *data_length = packet->length;
+      free(packet);
+      sq_num = 0;
+      return 2;
+    }
+    if (packet->flags.DATA == 1) {     // data packet
+      *data = malloc(packet->length);  // Allocate memory for data
+      memcpy(*data, packet->data, packet->length);
+      *data_length = packet->length;
+      free(packet);
+      sq_num++;
+      return 1;
+    }
+  } else {
     free(packet);
-    return 2;
-  }
-  if (packet->flags.DATA == 1) {     // data packet
-    *data = malloc(packet->length);  // Allocate memory for data
-    memcpy(*data, packet->data, packet->length);
-    *data_length = packet->length;
-    free(packet);
-    return 1;
+    return 0;
   }
 
   if (packet->flags.FIN == 1) {  // close request
