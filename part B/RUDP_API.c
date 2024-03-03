@@ -11,11 +11,28 @@
 #include <time.h>
 #include <unistd.h>
 
-#define TIMEOUT 1000  // Timeout in seconds
+#define TIMEOUT 15  // Timeout in seconds
 
 int checksum(RUDP *packet);
 int wait_for_ack(int socket, int seq_num, clock_t start_time, int timeout);
 int send_ack(int socket, RUDP *packet);
+
+void print_RUDP(RUDP *packet) {
+  printf("RUDP Packet:\n");
+  printf("  Flags:\n");
+  printf("    SYN: %u\n", packet->flags.SYN);
+  printf("    ACK: %u\n", packet->flags.ACK);
+  printf("    DATA: %u\n", packet->flags.DATA);
+  printf("    FIN: %u\n", packet->flags.FIN);
+  printf("  Sequence Number: %d\n", packet->seq_num);
+  printf("  Checksum: %d\n", packet->checksum);
+  printf("  Length: %d\n", packet->length);
+  // printf("  Data: ");
+  // for (int i = 0; i < packet->length; i++) {
+  //   printf("%c", packet->data[i]);
+  // }
+  printf("\n");
+}
 
 int RUDP_socket() {
   // create udp socket
@@ -175,6 +192,7 @@ int RUDP_send(int socket, char *data, int data_length) {
       packet->flags.FIN = 1;
     }
     memcpy(packet->data, data + i * WINDOW_MAX_SIZE, WINDOW_MAX_SIZE);
+    packet->length = WINDOW_MAX_SIZE;
     packet->checksum = checksum(packet);
     do {
       int sendResult = sendto(socket, packet, sizeof(RUDP), 0, NULL, 0);
@@ -190,9 +208,10 @@ int RUDP_send(int socket, char *data, int data_length) {
     packet->seq_num = packets_num;
     packet->flags.DATA = 1;
     packet->flags.FIN = 1;
-    packet->checksum = checksum(packet);
     memcpy(packet->data, data + packets_num * WINDOW_MAX_SIZE,
            last_packet_size);
+    packet->length = last_packet_size;
+    packet->checksum = checksum(packet);
     do {
       int sendResult = sendto(socket, packet, sizeof(RUDP), 0, NULL, 0);
       if (sendResult == -1) {
@@ -203,7 +222,6 @@ int RUDP_send(int socket, char *data, int data_length) {
     } while (wait_for_ack(socket, packets_num, clock(), TIMEOUT) <= 0);
     free(packet);
   }
-  free(packet);
   return SUCCESS;
 }
 
@@ -245,29 +263,31 @@ int RUDP_receive(int socket, char **data, int *data_length) {
     free(packet);
     return 1;
   }
+
   if (packet->flags.FIN == 1) {  // close request
-    clock_t FIN_send_time = clock();
     free(packet);
     // send ack and wait for TIMEOUT*10 seconds to check if the sender closed
-    while ((double)(clock() - FIN_send_time) / CLOCKS_PER_SEC < TIMEOUT * 10) {
-      packet = malloc(sizeof(RUDP));
+    printf("received close request\n");
+    struct timeval tv;
+    tv.tv_sec = 5;   // 5 seconds timeout
+    tv.tv_usec = 0;  // Not init'ing this can cause strange errors
+
+    setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof tv);
+
+    packet = malloc(sizeof(RUDP));
+    time_t FIN_send_time = time(NULL);
+    printf("waiting for close\n");
+    while ((double)(time(NULL) - FIN_send_time) < TIMEOUT) {
       memset(packet, 0, sizeof(RUDP));
-      int recvLen = recvfrom(socket, packet, sizeof(RUDP) - 1, 0, NULL, 0);
-      if (recvLen == -1) {
-        printf("recvfrom() failed with error code  : %d", errno);
-        free(packet);
-        return -1;
-      }
+      recvfrom(socket, packet, sizeof(RUDP) - 1, 0, NULL, 0);
       if (packet->flags.FIN == 1) {
         if (send_ack(socket, packet) == -1) {
           free(packet);
           return -1;
         }
-        FIN_send_time = clock();
+        FIN_send_time = time(NULL);
       }
-      free(packet);
     }
-    printf("received close request");
     free(packet);
     return -2;
   }
