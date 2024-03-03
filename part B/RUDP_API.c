@@ -194,9 +194,6 @@ int RUDP_send(int socket, char *data, int data_length) {
     packet->checksum = checksum(packet);
     do {
       int sendResult = sendto(socket, packet, sizeof(RUDP), 0, NULL, 0);
-      printf("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
-      print_RUDP(packet);
-      printf("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
       if (sendResult == -1) {
         printf("sendto() failed with error code  : %d", errno);
         return ERROR;
@@ -233,9 +230,6 @@ int RUDP_receive(int socket, char **data, int *data_length) {
   memset(packet, 0, sizeof(RUDP));
 
   int recvLen = recvfrom(socket, packet, sizeof(RUDP) - 1, 0, NULL, 0);
-  printf("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
-  print_RUDP(packet);
-  printf("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
   if (recvLen == -1) {
     printf("recvfrom() failed on receiving data with error code  : %d", errno);
     free(packet);
