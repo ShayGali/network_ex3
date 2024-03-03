@@ -208,6 +208,7 @@ int RUDP_send(int socket, char *data, int data_length) {
 }
 
 int RUDP_receive(int socket, char **data, int *data_length) {
+  int sq_num = -1;
   RUDP *packet = malloc(sizeof(RUDP));
   memset(packet, 0, sizeof(RUDP));
   int recvLen = recvfrom(socket, packet, sizeof(RUDP) - 1, 0, NULL, 0);
@@ -231,20 +232,28 @@ int RUDP_receive(int socket, char **data, int *data_length) {
     free(packet);
     return 0;
   }
-  if (packet->flags.FIN == 1 && packet->flags.DATA == 1) {  // last packet
-    *data = malloc(packet->length);  // Allocate memory for data
-    memcpy(*data, packet->data, packet->length);
-    *data_length = packet->length;
+  if (packet->seq_num == sq_num + 1) {
+    if (packet->flags.FIN == 1 && packet->flags.DATA == 1) {  // last packet
+      *data = malloc(packet->length);  // Allocate memory for data
+      memcpy(*data, packet->data, packet->length);
+      *data_length = packet->length;
+      free(packet);
+      sq_num = -1;
+      return 2;
+    }
+    if (packet->flags.DATA == 1) {     // data packet
+      *data = malloc(packet->length);  // Allocate memory for data
+      memcpy(*data, packet->data, packet->length);
+      *data_length = packet->length;
+      free(packet);
+      sq_num++;
+      return 1;
+    }
+  } else {
     free(packet);
-    return 2;
+    return 0;
   }
-  if (packet->flags.DATA == 1) {     // data packet
-    *data = malloc(packet->length);  // Allocate memory for data
-    memcpy(*data, packet->data, packet->length);
-    *data_length = packet->length;
-    free(packet);
-    return 1;
-  }
+
   if (packet->flags.FIN == 1) {  // close request
     clock_t FIN_send_time = clock();
     free(packet);
