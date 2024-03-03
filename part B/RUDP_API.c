@@ -233,6 +233,7 @@ int RUDP_send(int socket, char *data, int data_length) {
 int RUDP_receive(int socket, char **data, int *data_length) {
   RUDP *packet = malloc(sizeof(RUDP));
   memset(packet, 0, sizeof(RUDP));
+
   int recvLen = recvfrom(socket, packet, sizeof(RUDP) - 1, 0, NULL, 0);
   if (recvLen == -1) {
     printf("recvfrom() failed with error code  : %d", errno);
@@ -270,11 +271,10 @@ int RUDP_receive(int socket, char **data, int *data_length) {
       sq_num++;
       return 1;
     }
-  } else {
+  } else if (packet->flags.DATA == 1) {
     free(packet);
     return 0;
   }
-
   if (packet->flags.FIN == 1) {  // close request
     free(packet);
     // send ack and wait for TIMEOUT*10 seconds to check if the sender closed
@@ -300,6 +300,7 @@ int RUDP_receive(int socket, char **data, int *data_length) {
       }
     }
     free(packet);
+    close(socket);
     return -2;
   }
   free(packet);
