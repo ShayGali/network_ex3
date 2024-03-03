@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
   do {
     printf("Receiving data\n");
     rval = RUDP_receive(socket, &date_received, &data_length);
-    if (rval <= 0) {
+    if (rval < 0) {
       printf("Error receiving data\n");
       return -1;
     }
