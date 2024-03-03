@@ -1,6 +1,6 @@
 
 #define RETRY 3
-#define WINDOW_MAX_SIZE 1024
+#define WINDOW_MAX_SIZE 60000
 
 #define SUCCESS 1
 #define FAILURE 0
