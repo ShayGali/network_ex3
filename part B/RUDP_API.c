@@ -11,11 +11,12 @@
 #include <time.h>
 #include <unistd.h>
 
-#define TIMEOUT 15  // Timeout in seconds
+#define TIMEOUT 1  // Timeout in seconds
 
 int checksum(RUDP *packet);
 int wait_for_ack(int socket, int seq_num, clock_t start_time, int timeout);
 int send_ack(int socket, RUDP *packet);
+int set_timeout(int socket, int time);
 
 int sq_num = 0;
 
@@ -44,21 +45,14 @@ int RUDP_socket() {
     return ERROR;
   }
 
-  // set timeout for the socket
-  struct timeval timeout;
-  timeout.tv_sec = TIMEOUT;
-  timeout.tv_usec = 0;
-
-  if (setsockopt(send_socket, SOL_SOCKET, SO_RCVTIMEO, &timeout,
-                 sizeof(timeout)) < 0) {
-    perror("Error setting timeout for socket");
-    return ERROR;
-  }
-
   return send_socket;
 }
 
 int RUDP_connect(int socket, char *ip, int port) {
+  // setup a timeout for the socket
+  if (set_timeout(socket, TIMEOUT) == ERROR) {
+    return ERROR;
+  }
   // Setup the server address structure.
   struct sockaddr_in serverAddress;
   memset(&serverAddress, 0, sizeof(serverAddress));
@@ -173,6 +167,7 @@ int RUDP_get_connection(int socket, int port) {
       free(packetReply);
       return ERROR;
     }
+    set_timeout(socket, TIMEOUT);
     free(packet);
     free(packetReply);
     return SUCCESS;
@@ -255,12 +250,16 @@ int RUDP_receive(int socket, char **data, int *data_length) {
     return 0;
   }
   if (packet->seq_num == sq_num) {
+    if (packet->seq_num == 0 && packet->flags.DATA == 1) {
+      set_timeout(socket, TIMEOUT);
+    }
     if (packet->flags.FIN == 1 && packet->flags.DATA == 1) {  // last packet
       *data = malloc(packet->length);  // Allocate memory for data
       memcpy(*data, packet->data, packet->length);
       *data_length = packet->length;
       free(packet);
       sq_num = 0;
+      set_timeout(socket, 10000000);
       return 2;
     }
     if (packet->flags.DATA == 1) {     // data packet
@@ -279,11 +278,7 @@ int RUDP_receive(int socket, char **data, int *data_length) {
     free(packet);
     // send ack and wait for TIMEOUT*10 seconds to check if the sender closed
     printf("received close request\n");
-    struct timeval tv;
-    tv.tv_sec = 5;   // 5 seconds timeout
-    tv.tv_usec = 0;  // Not init'ing this can cause strange errors
-
-    setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof tv);
+    set_timeout(socket, TIMEOUT * 10);
 
     packet = malloc(sizeof(RUDP));
     time_t FIN_send_time = time(NULL);
@@ -376,5 +371,19 @@ int send_ack(int socket, RUDP *packet) {
     return FAILURE;
   }
   free(ack_packet);
+  return SUCCESS;
+}
+
+int set_timeout(int socket, int time) {
+  // set timeout for the socket
+  struct timeval timeout;
+  timeout.tv_sec = time;
+  timeout.tv_usec = 0;
+
+  if (setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) <
+      0) {
+    perror("Error setting timeout for socket");
+    return ERROR;
+  }
   return SUCCESS;
 }
