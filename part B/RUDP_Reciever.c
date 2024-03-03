@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
 
   char* date_received = NULL;
   int data_length = 0;
-  char* total_date = "";
+  char total_date[2097152] = {0};
   rval = 0;
   int run = 1;
 
@@ -67,7 +67,7 @@ int main(int argc, char* argv[]) {
       average_speed += speed;
       fprintf(file, "Run #%d Data: Time=%f S ; Speed=%f MB/S\n", run,
               time_taken, speed);
-      total_date = "";
+      memset(total_date, 0, sizeof(total_date));
       run++;
     }
   } while (rval >= 0);  //   keep the loop until the connection is closed
