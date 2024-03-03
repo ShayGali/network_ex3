@@ -175,6 +175,7 @@ int RUDP_send(int socket, char *data, int data_length) {
       packet->flags.FIN = 1;
     }
     memcpy(packet->data, data + i * WINDOW_MAX_SIZE, WINDOW_MAX_SIZE);
+    packet->length = WINDOW_MAX_SIZE;
     packet->checksum = checksum(packet);
     do {
       int sendResult = sendto(socket, packet, sizeof(RUDP), 0, NULL, 0);
@@ -190,9 +191,10 @@ int RUDP_send(int socket, char *data, int data_length) {
     packet->seq_num = packets_num;
     packet->flags.DATA = 1;
     packet->flags.FIN = 1;
-    packet->checksum = checksum(packet);
     memcpy(packet->data, data + packets_num * WINDOW_MAX_SIZE,
            last_packet_size);
+    packet->length = last_packet_size;
+    packet->checksum = checksum(packet);
     do {
       int sendResult = sendto(socket, packet, sizeof(RUDP), 0, NULL, 0);
       if (sendResult == -1) {
