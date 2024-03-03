@@ -41,8 +41,9 @@ int main(int argc, char *argv[]) {
     scanf("%d", &choice);
   } while (choice == 1);
 
-  RUDP_send(sock, EXIT_MESSAGE, strlen(EXIT_MESSAGE) + 1);
+  printf("Closing the connection\n");
   RUDP_close(sock);
+  printf("Connection closed\n");
   free(file_data);
   return 0;
 }
