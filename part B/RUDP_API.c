@@ -11,7 +11,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#define TIMEOUT 1  // Timeout in seconds
+#define TIMEOUT 0.5  // Timeout in seconds
 
 int checksum(RUDP *packet);
 int wait_for_ack(int socket, int seq_num, clock_t start_time, int timeout);
@@ -336,10 +336,8 @@ int wait_for_ack(int socket, int seq_num, clock_t start_time, int timeout) {
   while ((double)(clock() - start_time) / CLOCKS_PER_SEC < timeout) {
     int recvLen = recvfrom(socket, packetReply, sizeof(RUDP) - 1, 0, NULL, 0);
     if (recvLen == -1) {
-      printf("recvfrom() failed on waiting for ack with error code  : %d",
-             errno);
       free(packetReply);
-      return ERROR;
+      return FAILURE;
     }
     if (packetReply->seq_num == seq_num && packetReply->flags.ACK == 1) {
       free(packetReply);
@@ -381,10 +379,11 @@ int set_timeout(int socket, int time) {
   timeout.tv_sec = time;
   timeout.tv_usec = 0;
 
-  if (setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) <
-      0) {
-    perror("Error setting timeout for socket");
-    return ERROR;
-  }
+  // if (setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout))
+  // <
+  //     0) {
+  //   perror("Error setting timeout for socket");
+  //   return ERROR;
+  // }
   return SUCCESS;
 }
