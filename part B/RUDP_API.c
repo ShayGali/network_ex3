@@ -167,7 +167,7 @@ int RUDP_get_connection(int socket, int port) {
       free(packetReply);
       return ERROR;
     }
-    set_timeout(socket, TIMEOUT);
+    set_timeout(socket, TIMEOUT * 10);
     free(packet);
     free(packetReply);
     return SUCCESS;
@@ -251,7 +251,7 @@ int RUDP_receive(int socket, char **data, int *data_length) {
   }
   if (packet->seq_num == sq_num) {
     if (packet->seq_num == 0 && packet->flags.DATA == 1) {
-      set_timeout(socket, TIMEOUT);
+      set_timeout(socket, TIMEOUT * 10);
     }
     if (packet->flags.FIN == 1 && packet->flags.DATA == 1) {  // last packet
       *data = malloc(packet->length);  // Allocate memory for data
