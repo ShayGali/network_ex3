@@ -17,6 +17,8 @@ int checksum(RUDP *packet);
 int wait_for_ack(int socket, int seq_num, clock_t start_time, int timeout);
 int send_ack(int socket, RUDP *packet);
 
+int sq_num = 0;
+
 int RUDP_socket() {
   // create udp socket
   int send_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -210,7 +212,6 @@ int RUDP_send(int socket, char *data, int data_length) {
 }
 
 int RUDP_receive(int socket, char **data, int *data_length) {
-  int sq_num = -1;
   RUDP *packet = malloc(sizeof(RUDP));
   memset(packet, 0, sizeof(RUDP));
   int recvLen = recvfrom(socket, packet, sizeof(RUDP) - 1, 0, NULL, 0);
@@ -219,7 +220,6 @@ int RUDP_receive(int socket, char **data, int *data_length) {
     free(packet);
     return -1;
   }
-
   // check if the packet is corrupted, and send ack
   if (checksum(packet) != packet->checksum) {
     free(packet);
@@ -234,13 +234,13 @@ int RUDP_receive(int socket, char **data, int *data_length) {
     free(packet);
     return 0;
   }
-  if (packet->seq_num == sq_num + 1) {
+  if (packet->seq_num == sq_num) {
     if (packet->flags.FIN == 1 && packet->flags.DATA == 1) {  // last packet
       *data = malloc(packet->length);  // Allocate memory for data
       memcpy(*data, packet->data, packet->length);
       *data_length = packet->length;
       free(packet);
-      sq_num = -1;
+      sq_num = 0;
       return 2;
     }
     if (packet->flags.DATA == 1) {     // data packet

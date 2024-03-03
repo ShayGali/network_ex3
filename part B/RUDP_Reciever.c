@@ -41,7 +41,6 @@ int main(int argc, char* argv[]) {
   end = clock();
 
   do {
-    printf("Receiving data\n");
     rval = RUDP_receive(socket, &date_received, &data_length);
     if (rval == -1) {
       printf("Error receiving data\n");
@@ -59,7 +58,7 @@ int main(int argc, char* argv[]) {
     if (rval == 2) {  // if the data received is the last one, take it and write
                       // the stats it to the file
       strcat(total_date, date_received);
-      printf("Received date: %zu\n", sizeof(total_date));
+      printf("Received total date: %zu\n", sizeof(total_date));
       end = clock();
       double time_taken = ((double)(end - start)) / CLOCKS_PER_SEC;
       average_time += time_taken;
