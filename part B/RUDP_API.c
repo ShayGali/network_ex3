@@ -176,23 +176,30 @@ int RUDP_get_connection(int socket, int port) {
   return FAILURE;
 }
 
-// divide the data into packets and send them
 int RUDP_send(int socket, char *data, int data_length) {
+  // calculate the number of packets needed to send the data
   int packets_num = data_length / WINDOW_MAX_SIZE;
+  // calculate the size of the last packet
   int last_packet_size = data_length % WINDOW_MAX_SIZE;
+
   RUDP *packet = malloc(sizeof(RUDP));
+
+  // send the packets
   for (int i = 0; i < packets_num; i++) {
     memset(packet, 0, sizeof(RUDP));
-    packet->seq_num = i;
-    packet->flags.DATA = 1;
+    packet->seq_num = i;     // set the sequence number
+    packet->flags.DATA = 1;  // set the DATA flag
+    // if its the last packet, set the FIN flag
     if (i == packets_num - 1 && last_packet_size == 0) {
       packet->flags.FIN = 1;
     }
+    // put the data in the packet
     memcpy(packet->data, data + i * WINDOW_MAX_SIZE, WINDOW_MAX_SIZE);
+    // set the length of the packet
     packet->length = WINDOW_MAX_SIZE;
-    packet->length = WINDOW_MAX_SIZE;
+    // calculate the checksum of the packet
     packet->checksum = checksum(packet);
-    do {
+    do {  // send the packet and wait for ack
       int sendResult = sendto(socket, packet, sizeof(RUDP), 0, NULL, 0);
       if (sendResult == -1) {
         printf("sendto() failed with error code  : %d", errno);
@@ -201,8 +208,10 @@ int RUDP_send(int socket, char *data, int data_length) {
       // wait for ack and retransmit if needed
     } while (wait_for_ack(socket, i, clock(), TIMEOUT) <= 0);
   }
+  // if we have a last packet, send it
   if (last_packet_size > 0) {
     memset(packet, 0, sizeof(RUDP));
+    // set the fields of the packet
     packet->seq_num = packets_num;
     packet->flags.DATA = 1;
     packet->flags.FIN = 1;
@@ -210,9 +219,7 @@ int RUDP_send(int socket, char *data, int data_length) {
            last_packet_size);
     packet->length = last_packet_size;
     packet->checksum = checksum(packet);
-    packet->length = last_packet_size;
-    packet->checksum = checksum(packet);
-    do {
+    do {  // send the packet and wait for ack
       int sendResult = sendto(socket, packet, sizeof(RUDP), 0, NULL, 0);
       if (sendResult == -1) {
         printf("sendto() failed with error code  : %d", errno);
