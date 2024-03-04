@@ -6,8 +6,12 @@
 #include "RUDP_API.h"
 
 int main(int argc, char* argv[]) {
-  printf("~~~~~~~~ RUDP Receiver ~~~~~~~~\n");
+  // parse the command line arguments
+  if (argc != 3 || strcmp(argv[1], "-p") != 0) {
+    printf("Usage: %s -p <port>\n", argv[0]);
+  }
   int port = atoi(argv[2]);
+  printf("~~~~~~~~ RUDP Receiver ~~~~~~~~\n");
   int socket = RUDP_socket();
   if (socket == -1) {
     printf("Could not create socket\n");
