@@ -65,7 +65,8 @@ int RUDP_send(int socket, char *data, int data_length);
  * @param socket - the socket to receive from.
  * @param data - the data to receive.
  * @param data_length - the length of the data.
- * @return 1 is success, 0 if failed.
+ * @return 1 is data, 0 if nondata, 2 if last data packet,
+ *        -2 if close connection, -1 is failed.
  */
 int RUDP_receive(int socket, char **data, int *data_length);
 
