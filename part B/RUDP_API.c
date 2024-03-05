@@ -64,6 +64,7 @@ int RUDP_connect(int socket, char *ip, int port) {
     return ERROR;
   }
 
+  // set the server address as deafult for the socket
   if (connect(socket, (struct sockaddr *)&serverAddress,
               sizeof(serverAddress)) == -1) {
     perror("connect failed");
@@ -76,6 +77,8 @@ int RUDP_connect(int socket, char *ip, int port) {
   packet->flags.SYN = 1;
   int total_tries = 0;
   RUDP *recv_packet = NULL;
+
+  // try to connect for RETRY times
   while (total_tries < RETRY) {
     int send_result = sendto(socket, packet, sizeof(RUDP), 0, NULL, 0);
     if (send_result == -1) {
@@ -83,7 +86,9 @@ int RUDP_connect(int socket, char *ip, int port) {
       free(packet);
       return -1;
     }
+
     clock_t start_time = clock();
+
     do {
       // receive SYN-ACK message
       recv_packet = malloc(sizeof(RUDP));
