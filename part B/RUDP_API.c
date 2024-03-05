@@ -13,29 +13,25 @@
 
 #define TIMEOUT 1  // Timeout in seconds
 
+/**
+ * Calculate the checksum of the packet.
+ */
 int checksum(RUDP *packet);
+/**
+ * Wait for an acknowledgment packet, and if it didn’t receive any, return
+ * failure.
+ */
 int wait_for_ack(int socket, int seq_num, clock_t start_time, int timeout);
+/**
+ * Send acknowledgment packet, according to the received packet.
+ */
 int send_ack(int socket, RUDP *packet);
+/**
+ * Set timeout for the socket.
+ */
 int set_timeout(int socket, int time);
 
-int sq_num = 0;
-
-void print_RUDP(RUDP *packet) {
-  printf("RUDP Packet:\n");
-  printf("  Flags:\n");
-  printf("    SYN: %u\n", packet->flags.SYN);
-  printf("    ACK: %u\n", packet->flags.ACK);
-  printf("    DATA: %u\n", packet->flags.DATA);
-  printf("    FIN: %u\n", packet->flags.FIN);
-  printf("  Sequence Number: %d\n", packet->seq_num);
-  printf("  Checksum: %d\n", packet->checksum);
-  printf("  Length: %d\n", packet->length);
-  // printf("  Data: ");
-  // for (int i = 0; i < packet->length; i++) {
-  //   printf("%c", packet->data[i]);
-  // }
-  printf("\n");
-}
+int sq_num = 0;  // the sequence number of the last received packet
 
 int RUDP_socket() {
   // create udp socket
@@ -261,7 +257,8 @@ int RUDP_receive(int socket, char **data, int *data_length) {
     free(packet);
     return 0;
   }
-  if (packet->seq_num == sq_num) {
+  if (packet->seq_num ==
+      sq_num) {  // check if the packet is the next in the sequence
     if (packet->seq_num == 0 && packet->flags.DATA == 1) {
       set_timeout(socket, TIMEOUT * 10);
     }
