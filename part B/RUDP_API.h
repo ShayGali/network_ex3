@@ -1,6 +1,6 @@
 
-#define RETRY 3
-#define WINDOW_MAX_SIZE 60000
+#define RETRY 3                // the number of times trying to connect
+#define WINDOW_MAX_SIZE 60000  // the maximum size of data in a packet
 
 #define SUCCESS 1
 #define FAILURE 0
