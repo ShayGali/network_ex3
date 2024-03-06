@@ -5,8 +5,8 @@ tcp_speed = [7377.316432, 6894.314423, 6688.876205, 5620.420842]
 tcp_time = [0.000278, 0.000305, 0.000328, 0.000367]
 
 #RUDP
-rudp_speed = []
-rudp_time = []
+rudp_speed = [744.495662, 666.224428, 494.203762, 313.833389]
+rudp_time = [0.002732, 0.003240, 0.004650, 0.006580]
 # Labels for the x-axis (scenarios)
 labels = ['0%', '2%', '5%', '10%']
 
@@ -18,7 +18,7 @@ fig, ax = plt.subplots(2, 1, figsize=(10, 8))
 
 # Plotting for Average Speed
 ax[0].bar(x, tcp_speed, width, label='TCP')
-ax[0].bar([i + width for i in x], rudp_time, width, label='RUDP')
+ax[0].bar([i + width for i in x], rudp_speed, width, label='RUDP')  # Corrected the variable name here
 
 ax[0].set_xlabel('Scenario')
 ax[0].set_ylabel('Average Speed (MB/S)')
